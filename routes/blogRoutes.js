@@ -3,19 +3,53 @@ const requireLogin = require('../middlewares/requireLogin');
 
 const Blog = mongoose.model('Blog');
 
-module.exports = app => {
+module.exports = (app) => {
   app.get('/api/blogs/:id', requireLogin, async (req, res) => {
-    const blog = await Blog.findOne({
-      _user: req.user.id,
-      _id: req.params.id
-    });
+    //TODO: separate setup of redis client from the route handler
+    const blogs = await Blog.find({ _user: req.user.id });
 
-    res.send(blog);
+    res.send(blogs);
+
+    // const redis = require('redis');
+    // const redisUrl = 'redis://127.0.0.1:6379';
+    // const client = redis.createClient(redisUrl);
+    // await client.connect();
+    // //Do we have any cached data in redis related to this query
+    // const cachedBlogs = await client
+    //   .get(req.params.id)
+    //   .then((data) => (data ? JSON.parse(data) : null));
+
+    // //if yes then respond to the request right away and return
+    // if (cachedBlogs) {
+    //   console.log('Serving from Redis');
+    //   return res.send(cachedBlogs);
+    // }
+
+    // //if no we need to get from MongoDB,
+    // //respond to the request and
+    // //update our cache to store the data
+    // //TODO: hook up redis to mongoose
+    // const blogs = await Blog.findOne({
+    //   _user: req.user.id,
+    //   _id: req.params.id,
+    // });
+
+    // console.log('Serving from MongoDB');
+    // res.send(blogs);
+    // const stringifiedBlogs = JSON.stringify(blogs);
+    // //TODO: set the redis key to expire in 24 hours
+    // //TODO: figure out robust solutionfor generating redis keys
+    // await client.set(req.params.id, stringifiedBlogs, 'EX', 60 * 60 * 24);
+    // //list all the keys in redis
+    // //Set the key to expire in 5 seconds
+    // await client.set('hi', 'there', 'EX', 5);
   });
 
   app.get('/api/blogs', requireLogin, async (req, res) => {
     const blogs = await Blog.find({ _user: req.user.id });
-
+    //Blog is unique to the user
+    //req.user.id is the unique id of the user
+    //it may be used as a key for the redis cache
     res.send(blogs);
   });
 
@@ -25,7 +59,7 @@ module.exports = app => {
     const blog = new Blog({
       title,
       content,
-      _user: req.user.id
+      _user: req.user.id,
     });
 
     try {
