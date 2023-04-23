@@ -1,7 +1,7 @@
 import mapKeys from 'lodash/mapKeys';
 import { FETCH_BLOGS, FETCH_BLOG } from '../actions/types';
 
-export default function(state = {}, action) {
+const blogsReducer = function (state = {}, action) {
   switch (action.type) {
     case FETCH_BLOG:
       const blog = action.payload;
@@ -11,4 +11,6 @@ export default function(state = {}, action) {
     default:
       return state;
   }
-}
+};
+
+export default blogsReducer;
