@@ -6,7 +6,12 @@ const Blog = mongoose.model('Blog');
 module.exports = (app) => {
   app.get('/api/blogs/:id', requireLogin, async (req, res) => {
     //TODO: separate setup of redis client from the route handler
-    const blogs = await Blog.find({ _user: req.user.id });
+    console.log(req.user);
+    console.log(req.user._id);
+    const blogs = await Blog.findOne({
+      _user: req.user._id,
+      _id: req.params.id,
+    });
 
     res.send(blogs);
 
@@ -30,7 +35,7 @@ module.exports = (app) => {
     // //update our cache to store the data
     // //TODO: hook up redis to mongoose
     // const blogs = await Blog.findOne({
-    //   _user: req.user.id,
+    //   _user: req.user._id,
     //   _id: req.params.id,
     // });
 
@@ -46,9 +51,11 @@ module.exports = (app) => {
   });
 
   app.get('/api/blogs', requireLogin, async (req, res) => {
-    const blogs = await Blog.find({ _user: req.user.id });
+    console.log(req.user);
+    console.log(req.user._id);
+    const blogs = await Blog.find({ _user: req.user._id }).cache();
     //Blog is unique to the user
-    //req.user.id is the unique id of the user
+    //req.user._id is the unique id of the user
     //it may be used as a key for the redis cache
     res.send(blogs);
   });
@@ -59,14 +66,14 @@ module.exports = (app) => {
     const blog = new Blog({
       title,
       content,
-      _user: req.user.id,
+      _user: req.user._id,
     });
 
     try {
       await blog.save();
       res.send(blog);
     } catch (err) {
-      res.send(400, err);
+      res.status(400).send(err);
     }
   });
 };
