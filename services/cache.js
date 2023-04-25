@@ -10,6 +10,9 @@ mongoose.Query.prototype.cache = function (options = {}) {
   //Set the useCache property to true for
   //the current query instance:
   this.useCache = true;
+  //Set the primary key for the current query instance
+  this.primaryKey = JSON.stringify(options.key || '');
+
   //can be referenced in the exec function
   return this; //to make it chainable
 };
@@ -31,10 +34,10 @@ mongoose.Query.prototype.exec = async function () {
   const keyObject = Object.assign({}, currentQueryFilter, {
     collection: this.mongooseCollection.name,
   });
-  const key = JSON.stringify(keyObject);
+  const nestedKey = JSON.stringify(keyObject);
 
   //1. Check if the query has been cached
-  const cachedValue = await client.get(key);
+  const cachedValue = await client.hGet(this.primaryKey, nestedKey);
   if (cachedValue) {
     console.log('SERVING FROM REDIS CACHE');
     // console.log(this); this Query has a model property
@@ -63,11 +66,20 @@ mongoose.Query.prototype.exec = async function () {
   //3. Otherwise, issue the query and cache the result
   //'this' is a reference to the current Query instance
   // that we are about to execute
-
   const mongoDoc = await originalExec.apply(this, arguments);
   //mongoDoc is likely a mongoose document
   //In order to store it in redis, we must convert it to a JSON string
-  client.set(key, JSON.stringify(mongoDoc), { EX: 1 });
-  console.log('Returning value from MongoDB:', mongoDoc);
+  client.hSet(this.primaryKey, nestedKey, JSON.stringify(mongoDoc), {
+    EX: 100000,
+  });
+  console.log('Returning value from MongoDB'); //, mongoDoc);
   return mongoDoc;
+};
+
+//export object that can clear a hash
+module.exports = {
+  clearHash(hashKey) {
+    //Deletes all data associated with the hashKey
+    client.del(JSON.stringify(hashKey));
+  },
 };

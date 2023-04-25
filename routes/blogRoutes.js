@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const requireLogin = require('../middlewares/requireLogin');
+const { clearHash } = require('../services/cache');
 
 const Blog = mongoose.model('Blog');
 
@@ -53,7 +54,9 @@ module.exports = (app) => {
   app.get('/api/blogs', requireLogin, async (req, res) => {
     console.log(req.user);
     console.log(req.user._id);
-    const blogs = await Blog.find({ _user: req.user._id }).cache();
+    const blogs = await Blog.find({ _user: req.user._id }).cache({
+      key: req.user._id,
+    });
     //Blog is unique to the user
     //req.user._id is the unique id of the user
     //it may be used as a key for the redis cache
@@ -75,5 +78,12 @@ module.exports = (app) => {
     } catch (err) {
       res.status(400).send(err);
     }
+
+    //clear the cache for the current user
+    //after a new blog is created
+    //so that the next time the user
+    //requests for the list of blogs
+    //the new blog is included
+    clearHash(req.user._id);
   });
 };
