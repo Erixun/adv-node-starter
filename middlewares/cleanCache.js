@@ -6,8 +6,8 @@ const { clearHash } = require('../services/cache');
  * @param {Response} _ The response object.
  * @param {NextFunction} next The next-function.
  */
-const cleanCache = (req, _, next) => {
-  next();
+const cleanCache = async (req, _, next) => {
+  await next();
 
   clearHash(req.user._id);
 };
