@@ -2,16 +2,17 @@ const mongoose = require('mongoose');
 const redis = require('redis');
 const redisUrl = 'redis://127.0.0.1:6379';
 const client = redis.createClient(redisUrl);
+client.connect().then(() => console.log('Redis Connected!'));
+
 // Store the original exec function
 const originalExec = mongoose.Query.prototype.exec;
-client.connect().then(() => console.log('Redis Connected!'));
 
 mongoose.Query.prototype.cache = function (options = {}) {
   //Set the useCache property to true for
   //the current query instance:
   this.useCache = true;
   //Set the primary key for the current query instance
-  this.primaryKey = JSON.stringify(options.key || '');
+  this.hashKey = JSON.stringify(options.key || '');
 
   //can be referenced in the exec function
   return this; //to make it chainable
@@ -37,7 +38,7 @@ mongoose.Query.prototype.exec = async function () {
   const nestedKey = JSON.stringify(keyObject);
 
   //1. Check if the query has been cached
-  const cachedValue = await client.hGet(this.primaryKey, nestedKey);
+  const cachedValue = await client.hGet(this.hashKey, nestedKey);
   if (cachedValue) {
     console.log('SERVING FROM REDIS CACHE');
     // console.log(this); this Query has a model property
@@ -69,7 +70,7 @@ mongoose.Query.prototype.exec = async function () {
   const mongoDoc = await originalExec.apply(this, arguments);
   //mongoDoc is likely a mongoose document
   //In order to store it in redis, we must convert it to a JSON string
-  client.hSet(this.primaryKey, nestedKey, JSON.stringify(mongoDoc), {
+  client.hSet(this.hashKey, nestedKey, JSON.stringify(mongoDoc), {
     EX: 100000,
   });
   console.log('Returning value from MongoDB'); //, mongoDoc);
