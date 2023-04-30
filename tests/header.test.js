@@ -10,16 +10,30 @@ describe('Addition', () => {
 });
 
 //Write a test for launching the browser:
-describe('Launching the browser', () => {
-  it('launches the browser', async () => {
-    const browser = await puppeteer.launch({
+describe('puppeteer', () => {
+  let page, browser;
+
+  beforeAll(async () => {
+    browser = await puppeteer.launch({
       headless: false,
     });
-    const page = await browser.newPage();
+    page = await browser.newPage();
+    await page.goto('http://localhost:3000/');
+  });
 
-    expect(page).toBeDefined();
-    setTimeout(async () => {
-      await browser.close();
-    }, 2000);
+  it('can extract text from header', async () => {
+    // expect(page).toBeDefined();
+
+    const expected = 'Blogster';
+
+    //extract header text
+    const actual = await page.$eval('.brand-logo', (el) => el.innerHTML);
+
+    // const text = await page.evaluate(() => document.body.textContent);
+    expect(actual).toEqual(expected);
+    console.log(actual);
+    await browser.close();
+    // setTimeout(async () => {
+    // }, 2000);
   });
 });
