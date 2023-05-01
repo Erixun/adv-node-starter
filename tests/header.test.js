@@ -10,8 +10,8 @@ describe('Addition', () => {
 });
 
 //Write a test for launching the browser:
-describe('puppeteer', () => {
-  let page, browser;
+describe('Header', () => {
+  let browser, page;
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
@@ -21,19 +21,24 @@ describe('puppeteer', () => {
     await page.goto('http://localhost:3000/');
   });
 
-  it('can extract text from header', async () => {
-    // expect(page).toBeDefined();
-
-    const expected = 'Blogster';
-
-    //extract header text
-    const actual = await page.$eval('.brand-logo', (el) => el.innerHTML);
-
-    // const text = await page.evaluate(() => document.body.textContent);
-    expect(actual).toEqual(expected);
-    console.log(actual);
+  afterAll(async () => {
     await browser.close();
-    // setTimeout(async () => {
-    // }, 2000);
+  });
+
+  it('has the correct text', async () => {
+    const expected = 'Blogster';
+    const className = '.brand-logo';
+
+    //there is nothing magic about the $-sign.
+    const actual = await page.$eval(className, (el) => el.innerHTML);
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('clicking login starts oauth flow', async () => {
+    await page.click('.right a');
+    const url = await page.url();
+
+    expect(url).toMatch(/accounts\.google\.com/);
   });
 });
