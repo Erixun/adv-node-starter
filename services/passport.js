@@ -8,9 +8,12 @@ const User = mongoose.model('User');
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
-
+//passport looks at req.session.passport.user
+//and calls deserializeUser with the id (if it exists)
+//and then we call done with the user model instance
+//which is added to req.user
 passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => {
+  User.findById(id).then((user) => {
     done(null, user);
   });
 });
@@ -21,7 +24,7 @@ passport.use(
       callbackURL: '/auth/google/callback',
       clientID: keys.googleClientID,
       clientSecret: keys.googleClientSecret,
-      proxy: true
+      proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -31,7 +34,7 @@ passport.use(
         }
         const user = await new User({
           googleId: profile.id,
-          displayName: profile.displayName
+          displayName: profile.displayName,
         }).save();
         done(null, user);
       } catch (err) {
