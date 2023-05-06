@@ -1,15 +1,5 @@
 const puppeteer = require('puppeteer');
 
-describe('Addition', () => {
-  it('knows that 2 and 2 make 4', () => {
-    const expected = 4;
-    const actual = 2 + 2;
-
-    expect(actual).toBe(expected);
-  });
-});
-
-//Write a test for launching the browser:
 describe('Header', () => {
   let browser, page;
 
@@ -35,10 +25,48 @@ describe('Header', () => {
     expect(actual).toEqual(expected);
   });
 
-  it('clicking login starts oauth flow', async () => {
+  it('starts oauth flow when login is clicked', async () => {
     await page.click('.right a');
     const url = await page.url();
 
     expect(url).toMatch(/accounts\.google\.com/);
+  });
+
+  it('shows logout button when signed in', async () => {
+    const id = '6436f497db439599c00b90fd';
+    const sessionObject = { passport: { user: id } };
+    const SafeBuffer = require('safe-buffer').Buffer;
+    const sessionString = SafeBuffer.from(
+      JSON.stringify(sessionObject)
+    ).toString('base64');
+    const Keygrip = require('keygrip');
+    const keys = require('../config/keys');
+    const keygrip = new Keygrip([keys.cookieKey]);
+    const sig = keygrip.sign('session=' + sessionString);
+
+    console.log('sessionString', sessionString);
+    console.log('sig', sig);
+
+    await page.setCookie({
+      name: 'session',
+      value: sessionString,
+      url: 'http://localhost:3000/',
+    });
+    await page.setCookie({
+      name: 'session.sig',
+      value: sig,
+      url: 'http://localhost:3000/',
+    });
+    await page.goto('http://localhost:3000/');
+    await page.waitForSelector('a[href="/auth/logout"]');
+    // await page.waitForTimeout(4000);
+
+    const actual = await page.$eval(
+      'a[href="/auth/logout"]',
+      (el) => el.innerHTML
+    );
+    const expected = 'Logout';
+
+    expect(actual).toEqual(expected);
   });
 });
