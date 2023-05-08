@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Starting project for a course on Advanced Node @ Udemy",
   "main": "index.js",
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./tests/setup.js"
+    ],
+    "testEnvironment": "node"
+  },
   "scripts": {
     "start": "node index.js",
     "server": "node --watch index.js --ignore tests",
