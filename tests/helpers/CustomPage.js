@@ -57,6 +57,14 @@ class CustomPage {
     await this.page.goto(url);
     await this.page.waitForSelector('a[href="/auth/logout"]');
   }
+
+  execRequests(actions) {
+    return Promise.all(
+      actions.map(({ method, path, data }) => {
+        return this[method](path, data);
+      })
+    );
+  }
 }
 
 module.exports = CustomPage;
