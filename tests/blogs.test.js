@@ -5,7 +5,7 @@ async function getContentsOf(selector) {
   return this.$eval(selector, (el) => el.innerHTML);
 }
 
-xdescribe('When logged in', () => {
+describe('When logged in', () => {
   let page, blogTitle, blogContent;
 
   beforeEach(async () => {
@@ -52,7 +52,7 @@ xdescribe('When logged in', () => {
     });
   });
 
-  xdescribe('Submit using valid inputs', () => {
+  describe('Submit using valid inputs', () => {
     beforeEach(async () => {
       await page.login();
       await page.click('a[href="/blogs/new"]');

@@ -1,6 +1,6 @@
 const Page = require('./helpers/CustomPage.js');
 
-xdescribe('Header', () => {
+describe('Header', () => {
   let page;
 
   beforeAll(async () => {

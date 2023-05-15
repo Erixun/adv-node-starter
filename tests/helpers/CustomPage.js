@@ -4,8 +4,9 @@ const userFactory = require('../factories/userFactory.js');
 
 class CustomPage {
   static async build() {
+    console.log('headless mode: ', process.env.NODE_ENV === 'ci');
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: process.env.NODE_ENV === 'ci',
     });
     const page = await browser.newPage();
     const customPage = new CustomPage(page);
