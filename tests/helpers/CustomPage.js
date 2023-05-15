@@ -7,6 +7,7 @@ class CustomPage {
     console.log('headless mode: ', process.env.NODE_ENV === 'ci');
     const browser = await puppeteer.launch({
       headless: process.env.NODE_ENV === 'ci',
+      args: ['--no-sandbox'],
     });
     const page = await browser.newPage();
     const customPage = new CustomPage(page);
